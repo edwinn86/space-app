@@ -1,5 +1,7 @@
 import { Body, Equator, Observer } from 'astronomy-engine'
 
+const assetPath = (path) => `${import.meta.env.BASE_URL}${path}`
+
 const deepSkyObservations = [
   { id: 'pillars', name: 'Pillars of Creation', catalog: 'M16 · Eagle Nebula', ra: 274.70, dec: -13.81, fov: 0.05, distanceLy: 6500, visual: 'nebula', year: 2022, distance: '6,500 ly', type: 'Star-forming region', observatories: ['webb', 'hubble'], color: '#e3a263', size: 24 },
   { id: 'carina', name: 'Cosmic Cliffs', catalog: 'NGC 3324 · Carina', ra: 161.26, dec: -59.87, fov: 0.04, distanceLy: 7600, visual: 'nebula', year: 2022, distance: '7,600 ly', type: 'Stellar nursery', observatories: ['webb'], color: '#e3a263', size: 19 },
@@ -19,16 +21,16 @@ const deepSkyObservations = [
 ]
 
 const solarDefinitions = [
-  { id: 'sun', body: Body.Sun, name: 'Sun', type: 'Star', visual: 'star', color: '#ffd27a', radiusKm: 696340, axialTilt: 7.25, surface: 'solar', texture: '/textures/sun.jpg', size: 12 },
-  { id: 'moon', body: Body.Moon, name: 'Moon', type: 'Natural satellite', visual: 'moon', color: '#d8d5cc', radiusKm: 1737.4, axialTilt: 6.68, surface: 'cratered', texture: '/textures/moon.jpg', size: 9 },
-  { id: 'mercury', body: Body.Mercury, name: 'Mercury', type: 'Terrestrial planet', visual: 'planet', color: '#a9a49c', radiusKm: 2439.7, axialTilt: .034, surface: 'cratered', texture: '/textures/mercury.jpg', size: 7 },
-  { id: 'venus', body: Body.Venus, name: 'Venus', type: 'Terrestrial planet', visual: 'planet', color: '#e3bc78', radiusKm: 6051.8, axialTilt: 177.4, surface: 'clouded', texture: '/textures/venus_surface.jpg', size: 9 },
-  { id: 'mars', body: Body.Mars, name: 'Mars', type: 'Terrestrial planet', visual: 'planet', color: '#cf7553', radiusKm: 3389.5, axialTilt: 25.19, surface: 'martian', texture: '/textures/mars.jpg', size: 8 },
-  { id: 'jupiter', body: Body.Jupiter, name: 'Jupiter', type: 'Gas giant', visual: 'planet', color: '#d8b48e', radiusKm: 69911, axialTilt: 3.13, surface: 'jovian', texture: '/textures/jupiter.jpg', size: 11 },
-  { id: 'saturn', body: Body.Saturn, name: 'Saturn', type: 'Ringed gas giant', visual: 'ringed-planet', color: '#d8c28a', radiusKm: 58232, axialTilt: 26.73, surface: 'saturnian', texture: '/textures/saturn.jpg', size: 11 },
-  { id: 'uranus', body: Body.Uranus, name: 'Uranus', type: 'Ice giant', visual: 'planet', color: '#91c9d0', radiusKm: 25362, axialTilt: 97.77, surface: 'ice-giant', texture: '/textures/uranus.jpg', ringed: true, size: 9 },
-  { id: 'neptune', body: Body.Neptune, name: 'Neptune', type: 'Ice giant', visual: 'planet', color: '#668be2', radiusKm: 24622, axialTilt: 28.32, surface: 'neptunian', texture: '/textures/neptune.jpg', size: 9 },
-  { id: 'pluto', body: Body.Pluto, name: 'Pluto', type: 'Dwarf planet', visual: 'planet', color: '#b9a793', radiusKm: 1188.3, axialTilt: 119.6, surface: 'plutonian', texture: '/textures/pluto.jpg', textureCredit: 'NASA/JHUAPL/SwRI', size: 6 },
+  { id: 'sun', body: Body.Sun, name: 'Sun', type: 'Star', visual: 'star', color: '#ffd27a', radiusKm: 696340, axialTilt: 7.25, surface: 'solar', texture: assetPath('textures/sun.jpg'), size: 12 },
+  { id: 'moon', body: Body.Moon, name: 'Moon', type: 'Natural satellite', visual: 'moon', color: '#d8d5cc', radiusKm: 1737.4, axialTilt: 6.68, surface: 'cratered', texture: assetPath('textures/moon.jpg'), size: 9 },
+  { id: 'mercury', body: Body.Mercury, name: 'Mercury', type: 'Terrestrial planet', visual: 'planet', color: '#a9a49c', radiusKm: 2439.7, axialTilt: .034, surface: 'cratered', texture: assetPath('textures/mercury.jpg'), size: 7 },
+  { id: 'venus', body: Body.Venus, name: 'Venus', type: 'Terrestrial planet', visual: 'planet', color: '#e3bc78', radiusKm: 6051.8, axialTilt: 177.4, surface: 'clouded', texture: assetPath('textures/venus_surface.jpg'), size: 9 },
+  { id: 'mars', body: Body.Mars, name: 'Mars', type: 'Terrestrial planet', visual: 'planet', color: '#cf7553', radiusKm: 3389.5, axialTilt: 25.19, surface: 'martian', texture: assetPath('textures/mars.jpg'), size: 8 },
+  { id: 'jupiter', body: Body.Jupiter, name: 'Jupiter', type: 'Gas giant', visual: 'planet', color: '#d8b48e', radiusKm: 69911, axialTilt: 3.13, surface: 'jovian', texture: assetPath('textures/jupiter.jpg'), size: 11 },
+  { id: 'saturn', body: Body.Saturn, name: 'Saturn', type: 'Ringed gas giant', visual: 'ringed-planet', color: '#d8c28a', radiusKm: 58232, axialTilt: 26.73, surface: 'saturnian', texture: assetPath('textures/saturn.jpg'), size: 11 },
+  { id: 'uranus', body: Body.Uranus, name: 'Uranus', type: 'Ice giant', visual: 'planet', color: '#91c9d0', radiusKm: 25362, axialTilt: 97.77, surface: 'ice-giant', texture: assetPath('textures/uranus.jpg'), ringed: true, size: 9 },
+  { id: 'neptune', body: Body.Neptune, name: 'Neptune', type: 'Ice giant', visual: 'planet', color: '#668be2', radiusKm: 24622, axialTilt: 28.32, surface: 'neptunian', texture: assetPath('textures/neptune.jpg'), size: 9 },
+  { id: 'pluto', body: Body.Pluto, name: 'Pluto', type: 'Dwarf planet', visual: 'planet', color: '#b9a793', radiusKm: 1188.3, axialTilt: 119.6, surface: 'plutonian', texture: assetPath('textures/pluto.jpg'), textureCredit: 'NASA/JHUAPL/SwRI', size: 6 },
 ]
 
 const ephemerisDate = new Date()
@@ -86,7 +88,7 @@ const deepSkyWithProvenance = deepSkyObservations.map((item) => {
   const [, detail] = deepSkyProvenance[item.id]
   return {
     ...item,
-    deepTexture: `/deep-sky/${item.id}.png`,
+    deepTexture: assetPath(`deep-sky/${item.id}.png`),
     modelProvenance: {
       level: 'Image-informed synthetic model',
       detail: `${detail} Fine structure and emitted light use a generated texture rather than a telescope photograph.`,
