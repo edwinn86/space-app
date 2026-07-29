@@ -142,7 +142,7 @@ export default function DepthModel({ active, selected, onSelect, year }) {
   useEffect(() => {
     const mount = mountRef.current
     const scene = new THREE.Scene()
-    scene.background = new THREE.Color(0x030609)
+    scene.background = new THREE.Color(0x000000)
     const camera = new THREE.PerspectiveCamera(48, mount.clientWidth / mount.clientHeight, .05, 80)
     camera.position.set(9.5, 6.5, 11.5)
     const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' })

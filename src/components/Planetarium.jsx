@@ -221,8 +221,8 @@ export default function Planetarium({ active, selected, onSelect, year }) {
   useEffect(() => {
     const mount = mountRef.current
     const scene = new THREE.Scene()
-    scene.background = new THREE.Color(0x030609)
-    scene.fog = new THREE.FogExp2(0x030609, 0.012)
+    scene.background = new THREE.Color(0x000000)
+    scene.fog = new THREE.FogExp2(0x000000, 0.012)
     const camera = new THREE.PerspectiveCamera(52, mount.clientWidth / mount.clientHeight, 0.01, 30)
     const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' })
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
