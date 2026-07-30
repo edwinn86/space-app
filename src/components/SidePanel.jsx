@@ -1,8 +1,10 @@
 import { ArrowUpRight, Bookmark, Box, ChevronRight, Layers2, X } from 'lucide-react'
 import { observatoryMeta } from '../data/observations'
+import { hasWavelengthComparison } from '../data/wavelengthComparisons'
 
 export default function SidePanel({ item, onClose, onExplore }) {
   const previewTexture = item.deepTexture || item.texture
+  const canCompare = hasWavelengthComparison(item.id)
   return (
     <aside className="detail-panel">
       <div className="panel-actions">
@@ -54,14 +56,14 @@ export default function SidePanel({ item, onClose, onExplore }) {
         </div>
       </div>
 
-      <button className="change-card">
+      <button className="change-card" onClick={canCompare ? onExplore : undefined} disabled={!canCompare}>
         <span className="change-icon"><Layers2 size={18} /></span>
         <span><small>WHAT CHANGED?</small><strong>See what each wavelength reveals</strong></span>
         <ChevronRight size={18} />
       </button>
 
-      <button className="explore-button" onClick={onExplore} disabled={item.id !== 'pillars'}>
-        {item.id === 'pillars' ? 'Compare wavelengths' : 'Comparison coming soon'}
+      <button className="explore-button" onClick={onExplore} disabled={!canCompare}>
+        {canCompare ? 'Open archival wavelength study' : 'Archival comparison not yet curated'}
         <ArrowUpRight size={17} />
       </button>
     </aside>

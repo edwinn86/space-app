@@ -203,7 +203,7 @@ const galacticToEquatorial = (longitude) => {
   }
 }
 
-export default function Planetarium({ active, selected, onSelect, year }) {
+export default function Planetarium({ active, selected, focusRequest, onSelect, year }) {
   const mountRef = useRef(null)
   const labelsRef = useRef({})
   const sceneRef = useRef(null)
@@ -213,7 +213,11 @@ export default function Planetarium({ active, selected, onSelect, year }) {
   const dragModeRef = useRef('grab')
   const visible = useMemo(
     () => observations.filter(
-      (item) => item.year <= year && (item.scope === 'solar' ? active.solar : item.observatories.some((scope) => active[scope])),
+      (item) => item.year <= year && (
+        item.scope === 'solar'
+          ? active.solar
+          : item.observatories.length === 0 || item.observatories.some((scope) => active[scope])
+      ),
     ),
     [active, year],
   )
@@ -387,16 +391,46 @@ export default function Planetarium({ active, selected, onSelect, year }) {
     let moved = false
     let lastX = 0
     let lastY = 0
+    const activePointers = new Map()
+    let pinchDistance = 0
+    let pinchFov = camera.fov
+    let pinching = false
     const updateCamera = () => camera.rotation.set(pitch, yaw, 0, 'YXZ')
     updateCamera()
 
     const pointerDown = (event) => {
-      dragging = true; moved = false; lastX = event.clientX; lastY = event.clientY
+      activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY })
+      if (activePointers.size === 2) {
+        const [first, second] = [...activePointers.values()]
+        pinchDistance = Math.hypot(second.x - first.x, second.y - first.y)
+        pinchFov = targetFov
+        pinching = true
+        dragging = false
+        moved = true
+      } else {
+        dragging = true
+      }
+      moved = activePointers.size > 1; lastX = event.clientX; lastY = event.clientY
       gridOpacity = .045
       renderer.domElement.style.cursor = 'none'
       renderer.domElement.setPointerCapture(event.pointerId)
     }
     const pointerMove = (event) => {
+      if (activePointers.has(event.pointerId)) {
+        activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY })
+      }
+      if (activePointers.size >= 2) {
+        const [first, second] = [...activePointers.values()]
+        const distance = Math.hypot(second.x - first.x, second.y - first.y)
+        if (pinchDistance > 0) {
+          targetFov = Math.max(30, Math.min(80, pinchFov * pinchDistance / distance))
+          camera.fov = targetFov
+          camera.updateProjectionMatrix()
+          setFieldOfView(Math.round(targetFov))
+        }
+        moved = true
+        return
+      }
       if (!dragging) {
         renderer.domElement.style.cursor = hitAt(event) ? 'pointer' : 'grab'
         return
@@ -423,6 +457,19 @@ export default function Planetarium({ active, selected, onSelect, year }) {
       return raycaster.intersectObjects(markerMeshes, true)[0]
     }
     const pointerUp = (event) => {
+      activePointers.delete(event.pointerId)
+      if (pinching) {
+        if (activePointers.size === 0) pinching = false
+        if (activePointers.size === 1) {
+          const remaining = [...activePointers.values()][0]
+          lastX = remaining.x
+          lastY = remaining.y
+          dragging = true
+        }
+        gridOpacity = activePointers.size ? .045 : .15
+        renderer.domElement.style.cursor = activePointers.size ? 'none' : 'grab'
+        return
+      }
       dragging = false
       gridOpacity = .15
       renderer.domElement.style.cursor = 'grab'
@@ -440,6 +487,8 @@ export default function Planetarium({ active, selected, onSelect, year }) {
       }
     }
     const pointerCancel = () => {
+      activePointers.clear()
+      pinching = false
       dragging = false
       gridOpacity = .15
       renderer.domElement.style.cursor = 'grab'
@@ -535,6 +584,10 @@ export default function Planetarium({ active, selected, onSelect, year }) {
       sceneRef.current = null
     }
   }, [onSelect, visible])
+
+  useEffect(() => {
+    if (focusRequest > 0) sceneRef.current?.focus(selected)
+  }, [focusRequest, selected])
 
   const zoom = (amount) => {
     const camera = sceneRef.current?.camera

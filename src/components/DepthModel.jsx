@@ -125,7 +125,7 @@ const createObjectModel = (item) => {
   return group
 }
 
-export default function DepthModel({ active, selected, onSelect, year }) {
+export default function DepthModel({ active, selected, focusRequest, onSelect, year }) {
   const mountRef = useRef(null)
   const labelsRef = useRef({})
   const earthLabelRef = useRef(null)
@@ -134,7 +134,11 @@ export default function DepthModel({ active, selected, onSelect, year }) {
   selectedRef.current = selected
   const visible = useMemo(
     () => observations.filter(
-      (item) => item.year <= year && (item.scope === 'solar' ? active.solar : item.observatories.some((scope) => active[scope])),
+      (item) => item.year <= year && (
+        item.scope === 'solar'
+          ? active.solar
+          : item.observatories.length === 0 || item.observatories.some((scope) => active[scope])
+      ),
     ),
     [active, year],
   )
@@ -386,6 +390,10 @@ export default function DepthModel({ active, selected, onSelect, year }) {
       sceneRef.current = null
     }
   }, [onSelect, visible])
+
+  useEffect(() => {
+    if (focusRequest > 0) sceneRef.current?.focus(selected)
+  }, [focusRequest, selected])
 
   return (
     <main className="depth-model" ref={mountRef} aria-label="Logarithmic three dimensional distance model">

@@ -388,10 +388,49 @@ const texturedDeepSkyModel = (item) => {
   return group
 }
 
+const starModel = (item) => {
+  const group = new THREE.Group()
+  const color = new THREE.Color(item.color)
+  const radius = .16 + Math.min(.16, Math.log10(Math.max(1, item.radiusSolar || 1)) * .055)
+  const photosphere = new THREE.Mesh(
+    new THREE.SphereGeometry(radius, 40, 28),
+    new THREE.MeshBasicMaterial({ color }),
+  )
+  if (item.profile === 'rapid-rotator') photosphere.scale.y = .82
+  group.add(photosphere)
+
+  for (const [scale, opacity] of [[1.22, .2], [1.55, .07], [2.05, .025]]) {
+    const glow = new THREE.Mesh(
+      new THREE.SphereGeometry(radius * scale, 28, 20),
+      glowMaterial(color, opacity),
+    )
+    group.add(glow)
+  }
+
+  if (item.profile === 'binary') {
+    photosphere.position.x = -.12
+    const companion = new THREE.Mesh(
+      new THREE.SphereGeometry(radius * .72, 32, 22),
+      new THREE.MeshBasicMaterial({ color: '#ffd6a3' }),
+    )
+    companion.position.x = .22
+    group.add(companion)
+  } else if (item.id === 'sirius') {
+    const companion = new THREE.Mesh(
+      new THREE.SphereGeometry(radius * .2, 24, 18),
+      new THREE.MeshBasicMaterial({ color: '#f5fbff' }),
+    )
+    companion.position.set(.25, -.12, .02)
+    group.add(companion)
+  }
+  return group
+}
+
 export const createDeepSkyModel = (item) => {
   const random = randomFor(item.id)
   let group
   if (item.deepTexture) group = texturedDeepSkyModel(item)
+  else if (item.visual === 'star') group = starModel(item)
   else if (item.id === 'sombrero') group = sombreroGalaxy(item, random)
   else if (item.visual === 'galaxy') group = spiralGalaxy(item, random)
   else if (item.visual === 'nebula') group = cloudModel(item, random)

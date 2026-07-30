@@ -18,10 +18,12 @@ const galacticToEquatorial = (longitude) => {
   return { ra: (Math.atan2(y, x) * 180 / Math.PI + 360) % 360, dec: Math.asin(z) * 180 / Math.PI }
 }
 
-export default function SkyMap({ active, selected, onSelect, year }) {
+export default function SkyMap({ active, selected, focusRequest, onSelect, year }) {
   const stageRef = useRef(null)
   const canvasRef = useRef(null)
   const dragRef = useRef(null)
+  const pointersRef = useRef(new Map())
+  const pinchRef = useRef(null)
   const [viewport, setViewport] = useState({ width: 1000, height: 700 })
   const [center, setCenter] = useState({ ra: 180, dec: 0 })
   const [zoom, setZoom] = useState(1)
@@ -33,8 +35,18 @@ export default function SkyMap({ active, selected, onSelect, year }) {
   }, [center, viewport, zoom])
 
   const visible = observations.filter(
-    (item) => item.year <= year && (item.scope === 'solar' ? active.solar : item.observatories.some((scope) => active[scope])),
+    (item) => item.year <= year && (
+      item.scope === 'solar'
+        ? active.solar
+        : item.observatories.length === 0 || item.observatories.some((scope) => active[scope])
+    ),
   )
+
+  useEffect(() => {
+    if (focusRequest <= 0) return
+    setCenter({ ra: selected.ra, dec: selected.dec })
+    setZoom((current) => Math.max(current, 2.4))
+  }, [focusRequest, selected])
 
   useEffect(() => {
     const stage = stageRef.current
@@ -94,10 +106,29 @@ export default function SkyMap({ active, selected, onSelect, year }) {
   const changeZoom = (amount) => setZoom((current) => Math.min(6, Math.max(1, current + amount)))
 
   const pointerDown = (event) => {
-    dragRef.current = { x: event.clientX, y: event.clientY, ra: center.ra, dec: center.dec }
+    pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY })
+    if (pointersRef.current.size === 2) {
+      const [first, second] = [...pointersRef.current.values()]
+      pinchRef.current = {
+        distance: Math.hypot(second.x - first.x, second.y - first.y),
+        zoom,
+      }
+      dragRef.current = null
+    } else {
+      dragRef.current = { x: event.clientX, y: event.clientY, ra: center.ra, dec: center.dec }
+    }
     event.currentTarget.setPointerCapture(event.pointerId)
   }
   const pointerMove = (event) => {
+    if (pointersRef.current.has(event.pointerId)) {
+      pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY })
+    }
+    if (pointersRef.current.size >= 2 && pinchRef.current) {
+      const [first, second] = [...pointersRef.current.values()]
+      const distance = Math.hypot(second.x - first.x, second.y - first.y)
+      setZoom(Math.min(6, Math.max(1, pinchRef.current.zoom * distance / pinchRef.current.distance)))
+      return
+    }
     if (!dragRef.current) return
     const dx = event.clientX - dragRef.current.x
     const dy = event.clientY - dragRef.current.y
@@ -105,6 +136,16 @@ export default function SkyMap({ active, selected, onSelect, year }) {
       ra: (dragRef.current.ra + dx / viewport.width * 360 / zoom + 360) % 360,
       dec: Math.max(-70, Math.min(70, dragRef.current.dec + dy / viewport.height * 180 / zoom)),
     })
+  }
+  const pointerEnd = (event) => {
+    pointersRef.current.delete(event.pointerId)
+    if (pointersRef.current.size < 2) pinchRef.current = null
+    if (pointersRef.current.size === 1) {
+      const remaining = [...pointersRef.current.values()][0]
+      dragRef.current = { x: remaining.x, y: remaining.y, ra: center.ra, dec: center.dec }
+    } else {
+      dragRef.current = null
+    }
   }
 
   return (
@@ -114,8 +155,8 @@ export default function SkyMap({ active, selected, onSelect, year }) {
       aria-label="Interactive 360 degree map of telescope observations"
       onPointerDown={pointerDown}
       onPointerMove={pointerMove}
-      onPointerUp={() => { dragRef.current = null }}
-      onPointerCancel={() => { dragRef.current = null }}
+      onPointerUp={pointerEnd}
+      onPointerCancel={pointerEnd}
       onWheel={(event) => changeZoom(event.deltaY > 0 ? -.25 : .25)}
     >
       <canvas className="celestial-reference" ref={canvasRef} />
@@ -135,7 +176,9 @@ export default function SkyMap({ active, selected, onSelect, year }) {
               '--glow': item.color,
               '--size': `${Math.max(item.size, item.fov * viewport.width * zoom / 360)}px`,
             }}
-            onPointerDown={(event) => event.stopPropagation()}
+            onPointerDown={(event) => {
+              if (event.pointerType === 'mouse') event.stopPropagation()
+            }}
             onClick={() => onSelect(item)}
             aria-label={`Explore ${item.name} at right ascension ${item.ra} degrees, declination ${item.dec} degrees`}
           >
